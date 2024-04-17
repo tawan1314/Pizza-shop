@@ -1,0 +1,209 @@
+-- Creating table customers
+CREATE TABLE customers (
+    customer_id INT PRIMARY KEY,
+    firstname VARCHAR(50),
+    lastname VARCHAR(50),
+    age INT
+);
+
+--Inserting customers data
+INSERT INTO customers (customer_id, firstname, lastname, age) VALUES
+('C01', 'Tawan', 'Duangchit', 30),
+('C02', 'Metha', 'Kriangkred', 28),
+('C03', 'Napassakorn', 'Sabainak', 35),
+('C04', 'Ratipong', 'Wongwattana', 25),
+('C05', 'Anan', 'Thammamunee', 40);
+
+--Display all data in customers table
+SELECT * FROM customers;
+
+-- Creating table menus
+CREATE TABLE menus (
+    menu_id INT PRIMARY KEY,
+    menu_name VARCHAR(50),
+    price INT
+);
+
+--Inserting menus data
+INSERT INTO menus (menu_id, menu_name, price) VALUES
+('M01', 'Margherita Pizza', 169),
+('M02', 'Pepperoni Pizza', 269),
+('M03', 'Vegetarian Pizza', 199),
+('M04', 'Supreme Pizza', 299),
+('M05', 'Hawaiian Pizza', 179);
+
+--Display all data in menus table
+SELECT * FROM menus;
+
+-- Creating table orders
+CREATE TABLE orders (
+    order_id INT PRIMARY KEY,
+    customer_id INT,
+    menu_id INT,
+    order_date DATE,
+    quantity INT,
+    total INT,
+    FOREIGN KEY (customer_id) REFERENCES customers(customer_id),
+    FOREIGN KEY (menu_id) REFERENCES menus(menu_id)
+);
+
+--Inserting orders data
+INSERT INTO orders (order_id, customer_id, menu_id, order_date, quantity, total)
+VALUES
+('O01', 'C03', 'M01', '2023-10-29', 2, 338),
+('O02', 'C05', 'M05', '2023-10-29', 1, 179),
+('O03', 'C01', 'M04', '2023-10-29', 1, 299),
+('O04', 'C03', 'M04', '2023-10-30', 1, 299),
+('O05', 'C04', 'M05', '2023-10-30', 1, 179),
+('O06', 'C05', 'M05', '2023-10-31', 2, 358),
+('O07', 'C03', 'M04', '2023-10-31', 1, 299),
+('O08', 'C01', 'M03', '2023-10-31', 1, 199),
+('O09', 'C02', 'M03', '2023-11-01', 1, 199),
+('O10', 'C03', 'M02', '2023-11-01', 1, 269),
+('O11', 'C05', 'M01', '2023-11-01', 1, 169),
+('O12', 'C01', 'M01', '2023-11-01', 2, 338),
+('O13', 'C01', 'M01', '2023-11-02', 1, 169),
+('O14', 'C05', 'M02', '2023-11-02', 1, 269),
+('O15', 'C04', 'M03', '2023-11-02', 1, 199),
+('O16', 'C02', 'M03', '2023-11-02', 1, 199),
+('O17', 'C03', 'M04', '2023-11-03', 1, 299),
+('O18', 'C04', 'M05', '2023-11-03', 3, 537),
+('O19', 'C01', 'M01', '2023-11-04', 1, 169),
+('O20', 'C02', 'M02', '2023-11-04', 1, 269);
+
+--Display all data in orders table
+SELECT
+  *
+FROM orders;
+
+--Order per date
+SELECT 
+  order_date,
+  SUM(quantity) as quantity,
+    SUM(total) AS total
+FROM orders
+GROUP BY 1;
+--ORDER BY 3 DESC, 2 DESC; (Remove -- for descendants data)
+
+--Order per customer
+SELECT 
+  firstname || ' ' || lastname as fullname,
+    SUM(o.quantity) as quantity,
+    SUM(total) as total
+FROM orders as o
+INNER JOIN customers  as c
+ON c.customer_id = o.customer_id
+GROUP BY 1
+ORDER BY 2 DESC,1;
+
+--Order per menus
+SELECT 
+  m.menu_name,
+    count(DISTINCT o.order_date) AS order_count,
+    SUM(quantity) as quantity,
+    SUM(total) as total
+FROM orders as o
+INNER JOIN menus as m
+ON o.menu_id = m.menu_id
+GROUP BY 1
+ORDER BY 4 DESC, 3 DESC, 2 DESC, 1;
+
+--General data in table
+SELECT
+  COUNT(DISTINCT c.customer_id) AS customer_count,
+    AVG(c.age) AS avg_age,
+    COUNT(DISTINCT m.menu_id) AS menu_count,
+    COUNT(DISTINCT o.order_id) AS order_count,
+    SUM(o.quantity) AS quantity,
+    SUM(o.total) AS sum_total,
+    ROUND(AVG(o.total),0) AS avg_total,
+    MAX(o.total) AS max_total,
+    MIN(o.total) AS min_total,
+    COUNT(DISTINCT order_date) AS date_count
+FROM customers AS c
+INNER JOIN orders AS o
+ON c.customer_id = o.customer_id
+INNER JOIN menus AS m
+ON o.menu_id = m.menu_id;
+
+--customers detail data
+SELECT
+  c.firstname || ' ' || c.lastname as fullname,
+    COUNT(DISTINCT m.menu_id) AS menu_count,
+    COUNT(o.order_id) AS order_count,
+    SUM(quantity) AS quantity,
+    SUM(o.total) AS sum_total,
+    ROUND(AVG(o.total),0) AS avg_total,
+    MAX(o.total) AS max_total,
+    MIN(o.total) AS min_total,
+    COUNT(o.order_date) AS date_count
+FROM customers AS c
+INNER JOIN orders AS o
+ON c.customer_id = o.customer_id
+INNER JOIN menus AS m
+ON o.menu_id = m.menu_id
+GROUP BY 1
+ORDER BY 5 DESC, 1;
+
+--If quantity of pizzas more than or equal 6 get 10% discount in next order
+--If quantity of pizzas more than or equal 5 get 5% discount in next order
+SELECT
+  firstname || ' ' || lastname as fullname,
+    COUNT(o.customer_id) as customer_orders,
+    SUM(quantity) AS quantity,
+  CASE
+      WHEN SUM(quantity) >= 6 THEN 'Discount 10%'
+        WHEN SUM(quantity) >= 5 THEN 'Discount 5%'
+        ELSE 'Discount 0%'
+    END AS discount
+FROM orders AS o
+INNER JOIN customers  as c
+ON c.customer_id = o.customer_id
+GROUP BY 1;
+
+--Price discount
+SELECT
+  menu_name,
+    price,
+  ROUND(price * 0.95,0) AS 'discount_5%',
+  ROUND(price * 0.90,0) AS 'discount_10%'
+FROM menus
+
+--If quantity of pizza menus bought more than or equal 6 = Recommend menu
+SELECT
+  m.menu_name,
+    COUNT(o.menu_id) as menu_orders,
+    SUM(quantity) AS quantity,
+  CASE
+      WHEN SUM(quantity) >= 6 THEN 'Recommend menu'
+        ELSE ''
+    END AS recommendation
+FROM orders AS o
+INNER JOIN menus as m
+ON m.menu_id = o.menu_id
+GROUP BY 1;
+
+--Subquery percentage of total per day
+SELECT 
+  m.menu_name,
+    SUM(o.total) AS sum_total,
+    ROUND(SUM(o.total) * 1.0 / (SELECT SUM(total) FROM orders AS o WHERE order_date = '2023-11-04'),1) as percentage
+FROM orders as o
+INNER JOIN menus as m
+ON o.menu_id = m.menu_id
+WHERE order_date BETWEEN '2023-10-29' AND '2023-11-04'
+GROUP BY 1;
+
+--WITH each a pizza customers love
+WITH pizza_lover as(
+  SELECT * FROM menus
+  WHERE menu_name LIKe 'S%')
+SELECT 
+  c.firstname || ' ' || c.lastname AS fullname,
+  count(*) AS lover_count
+FROM pizza_lover AS p
+INNER JOIN orders AS o
+ON o.menu_id = p.menu_id
+INNER JOIN customers AS c
+ON o.customer_id = c.customer_id
+GROUP BY 1;
