@@ -1,0 +1,106 @@
+--Create employee table
+CREATE TABLe employee (
+    id INT PRIMARY KEY UNIQUE,
+    name TEXT,
+    department TEXT,
+    position TEXT,
+    salary REAL --float
+);
+
+--Insert employee detail into employee table
+INSERT INTO employee VALUES 
+    (1, 'David', 'Marketing', 'CEO', 100000),
+    (2, 'John' , 'Marketing', 'VP', 85000 ),
+    (3, 'Marry', 'Sales', 'Manager', 60000);
+
+--Show all data in employee table
+SELECT * FROM employee;
+
+--Select data
+SELECT
+    name,
+    salary,
+    ROUND(salary * 1.10,2) AS new_salary, --ROUND = round decimals
+    LOWER(name) || '@company.com' AS email, --LOWER = lower character
+    UPPER(name) || '@company.com' AS email, --UPPER = upper character
+    PROPER(name) || '@company.com' AS email --PROPER = big first character
+FROM employee;
+
+--Insert new employees
+INSERT INTO employee VALUES 
+    (4, 'Harry', 'IT', 'Senior Manager', 88000),
+    (5, 'Walker', 'IT', 'Manager', 68000);
+
+SELECT * FROM employee;
+
+--Filter data
+SELECT * FROM employee
+WHERE department = 'Marketing';
+--or
+SELECT * FROM employee
+WHERE salary > 60000;
+
+--AND operator
+SELECT * FROM employee
+WHERE department = 'Marketing' AND salary > 90000;
+
+--OR operator
+SELECT * FROM employee
+WHERE department = 'Marketing' OR department = 'IT';
+
+--IN operator
+SELECT * FROM employee
+WHERE department IN ('Sales', 'IT');
+
+--BETWEEN operator
+SELECT * FROM employee
+WHERE salary BETWEEN (80000 AND 100000);
+
+--LIKE function
+SELECT * FROM employee
+WHERE name LIKE 'd%';
+
+--Update data
+UPDATE employee
+SET salary = 99000
+WHERE id = 1;
+
+SELECT * FROM employee;
+
+--Delete some record in the table
+DELETE FROM employee
+WHERE id IN (2,5);
+
+--Delete all records in the table
+DELETE FROM employee
+
+SELECT * FROM employee;
+
+--Change table name
+ALTER TABLE employee
+RENAME to myemployee; --RENAME = change name
+
+SELECT * from myemployee;
+
+--Add email column
+ALTER TABLE myemployee
+ADD email TEXT; --ADD = add data
+
+SELECT * from myemployee;
+
+--Update the email column
+UPDATE myemployee
+SET email = CONCAT(LOWER(name),'_',LOWER(position),'@company.com'); --CONCAT = combine texts together
+
+SELECT * from myemployee;
+
+--Create new table from previous table
+CREATE TABLE myemployee_backup as
+  SELECT * FROM myemployee;
+
+SELECT * FROM myemployee;
+
+--Delete the table
+DROP table myemployee_backup;
+
+DROp TABLE myemployee;
