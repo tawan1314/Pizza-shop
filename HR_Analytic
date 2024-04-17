@@ -1,0 +1,149 @@
+--“HR Analytic” Project from DataYolk
+--https://datayolk.net/data/hr-analytics-sql-project/?utm_campaign=data-articles&utm_medium=social&utm_source=facebook&fbclid=IwAR3yCsqiO8z79PrPenNEG3DK8-m6rQ-jqvw0NaCNIqojfKJ4mJz5Y7-fIJ8
+
+-- Create Employee table
+CREATE TABLE Employee (
+  employee_id INTEGER PRIMARY KEY,
+  first_name TEXT NOT NULL,
+  last_name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  hire_date DATE NOT NULL,    
+  team_id INTEGER NOT NULL
+);
+
+-- Insert values into Employee table
+INSERT INTO Employee (employee_id, first_name, last_name, email, hire_date, team_id)
+values (1, 'Warde', 'Remon', 'wremon0@zimbio.com', '1-Jun-23', 1),
+  (2, 'Orlando', 'Groneway', 'ogroneway1@wikipedia.org', '22-Jun-23', 1),
+  (3, 'Amalita', 'Shorland', 'ashorland2@npr.org', '25-Mar-23', 1),
+  (4, 'Reinwald', 'Pickersail', 'rpickersail3@skyrock.com', '24-Jun-23', 1),
+  (5, 'Ilario', 'Anfrey', 'ianfrey4@google.com', '2-Jun-23', 1),
+  (6, 'Davey', 'Frowen', 'dfrowen5@nsw.gov.au', '3-Mar-23', 6),
+  (7, 'Leigha', 'Randlesome', 'lrandlesome6@alibaba.com', '15-Oct-23', 6),
+  (8, 'Junia', 'Yakovliv', 'jyakovliv7@artisteer.com', '31-Jul-23', 6),
+  (9, 'Rochell', 'Waggatt', 'rwaggatt8@opera.com', '15-Apr-23', 6),
+  (10, 'Moises', 'Ardley', 'mardley9@webnode.com', '21-Jun-23', 6);
+
+-- Create Salary table
+CREATE TABLE Salary (
+  employee_id INTEGER PRIMARY KEY,
+  role TEXT NOT NULL,
+  salary INTEGER NOT NULL
+);
+
+-- Insert values into Salary table
+INSERT INTO Salary (employee_id, role, salary)
+values (1, 'Sales', 40153),
+  (2, 'Marketing', 46670),
+  (3, 'Legal', 71983),
+  (4, 'Sales', 15857),
+  (5, 'Software Engineer', 95174),
+  (6, 'Sales', 27819),
+  (7, 'Legal', 75323),
+  (8, 'Software Engineer', 90525),
+  (9, 'Tax Accountant', 85946),
+  (10, 'Marketing', 56575);
+
+-- Create Team table
+CREATE TABLE Team (
+  team_id INTEGER PRIMARY KEY,
+  team_name TEXT NOT NULL
+);
+
+-- Insert values into Team table
+INSERT INTO Team (team_id, team_name) values 
+  (1, 'plan A'),
+  (6, 'plan B');
+
+-- Query find employees hired date
+SELECT
+  *
+FROM Employee AS em
+LEfT JOIN Salary AS sa
+ON em.employee_id = sa.employee_id;
+
+-- Add new column "hire_date_update"
+ALTER TABLE Employee
+ADD COLUMN hire_date_update;
+
+-- Update new date into hire_date_update
+UPDATE Employee
+SET hire_date_update = CASE employee_id
+                          WHEN 1 THEN '2023-06-01'
+                          WHEN 2 THEN '2023-06-22'
+                          WHEN 3 THEN '2023-03-25'
+                          WHEN 4 THEN '2023-06-24'
+                          WHEN 5 THEN '2023-06-02'
+                          WHEN 6 THEN '2023-03-03'
+                          WHEN 7 THEN '2023-10-15'
+                          WHEN 8 THEN '2023-07-31'
+                          WHEN 9 THEN '2023-04-15'
+                          WHEN 10 THEN '2023-06-21'
+                          ELSE ''
+                        END
+WHERE hire_date_update IS NULL;
+
+--Query the lastest 3 employees hired date
+SELECT
+  t.team_name,
+  em.first_name,
+  em.last_name,
+  email,
+  hire_date,
+  RANK() OVER (ORDER BY hire_date_update DESC) AS hire_date_rank
+FROM Employee AS em
+JOIN Team AS t
+ON em.team_id = t.team_id
+limit 3;
+
+-- Total salary
+SELECT
+  SUM(salary)
+FROM Salary;
+
+-- Average of salary each role
+SELECT 
+  role,
+  salary,
+  SUM(salary) AS sum_salary,
+  AVG(salary) AS avg_salary,
+  MAX(salary) AS max_salary,
+  MIN(salary) AS min_salary,
+  COUNT(role) AS count_role
+FROM Salary
+GROUP BY role;
+
+-- Salary proportion each role
+SELECT 
+  role,
+  ROUND((SUM(salary) * 1.0 / (SELECT SUM(salary) FROM Salary)) * 100, 2) AS proportion
+FROM Salary
+GROUP BY role;
+
+-- Segment
+SELECT 
+  em.first_name,
+  em.last_name,
+  s.salary,
+  CASE
+    WHEN s.salary > 75000 THEN "Manager"
+    WHEN s.salary >= 45000 AND s.salary <= 75000 THEN "Senior"
+    ELSE "Staff"
+  END AS segment
+FROM Employee AS em
+JOIN Salary AS s
+ON em.employee_id = s.employee_id;
+
+-- A new employee on 14 Oct 2023 Marketing salary 45000
+INSERT INto Employee
+VALUES (11, "New", "Employee", "new_emplyee@company.com", "14-Oct-23", 6, "2023-10-14");
+
+INSERT INTO Salary
+VALUES (11, "Marketing", 45000);
+
+-- Average marketing salary
+SELECT 
+  role,
+  AVG(salary) AS average_salary
+FROM salary
+WHERE role = "Marketing";
